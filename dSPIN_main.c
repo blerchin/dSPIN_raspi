@@ -2,9 +2,9 @@
 #include <unistd.h>
 
 #include "dSPIN.h"
-//dSPIN_main.ino - Contains the setup() and loop() functions.
 
 int main( int argc, char* argv[]) {
+	printf("hello world\n");
 	float testSpeed = 10;
 
 	int err;
@@ -14,13 +14,17 @@ int main( int argc, char* argv[]) {
 	//  control the dSPIN chip and relies entirely upon the pin redefinitions
 	//  in dSPIN_example.ino
 	err = dSPIN_init();
+	printf("init exited with status %x\n",err);
 
 	// First things first: let's check communications. The CONFIG register should
 	//  power up to 0x2E88, so we can use that to check the communications.
 	//  On the test jig, this causes an LED to light up.
-	if (dSPIN_GetParam(dSPIN_CONFIG) == 0x2E88){
-		printf("dSPIN setup successful");
-	}
+	err = dSPIN_GetParam(dSPIN_CONFIG);
+	if (err == 0x2E88){
+		printf("dSPIN setup successful\n");
+	} else
+		printf("dSPIN config returned %x.\n", err);
+	err=0;
 
 	// The following function calls are for this demo application- you will
 	//  need to adjust them for your particular application, and you may need

@@ -7,21 +7,25 @@
 //   values usable by the dsPIN controller. Also contains the specialized configuration
 //   function for the dsPIN chip and the onboard peripherals needed to use it.
 
+
 // This simple function shifts a byte out over SPI and receives a byte over
 //  SPI. Unusually for SPI devices, the dSPIN requires a toggling of the
 //  CS (slaveSelect) pin after each byte sent. That makes this function
 //  a bit more reasonable, because we can include more functionality in it.
-char dSPIN_Xfer(char data)
+byte dSPIN_Xfer(byte data)
 {
-	int err = 0;
-	unsigned char d = data;
-		
-  // SPI.transfer() both shifts a byte out on the MOSI pin AND receives a
-  //  byte in on the MISO pin.
-  err = wiringPiSPIDataRW(dSPIN_SPI_CHANNEL, &d, 8);
-	fprintf(stderr,"Transferred a byte with result %p.\n", err);
+	int err=0;
+	fprintf(stderr, "Transferring byte %x.\n", data);
+	digitalWrite(dSPIN_CS, LOW);	
+  err = wiringPiSPIDataRW(dSPIN_SPI_CHANNEL, &data, 8);
+	int en = errno;
+	digitalWrite(dSPIN_CS, HIGH);
+	fprintf(stderr,"Transferred a byte with status %x.\n", err);
+	fprintf(stderr,"Transferred a byte with errno %x.\n", en);
+	fprintf(stderr,"Transferred a byte with result %x.\n", data);
+	err = 0;
 
-  return d;
+  return data;
 }
 
 // The value in the ACC register is [(steps/s/s)*(tick^2)]/(2^-40) where tick is 
@@ -142,18 +146,17 @@ unsigned long dSPIN_Param(unsigned long value, byte bit_len)
 int dSPIN_init()
 {
 	int err = 0;
-  // set up the input/output pins for the application.
-	// if raspi SS works properly, we don't need this
-  //pinMode(SLAVE_SELECT_PIN, OUTPUT);
-  //digitalWrite(SLAVE_SELECT_PIN, HIGH);
-
 	err = wiringPiSetupGpio();
-	if( err !=0){
-		fprintf(stderr, "wiringPi Setup failed with Error %p\n", err);
-		return dSPIN_STATUS_FATAL;
-	}
+  // set up the input/output pins for the application.
   pinMode(dSPIN_BUSYN, INPUT);
   pinMode(dSPIN_RESET, OUTPUT);
+	pinMode(dSPIN_CS, 	 OUTPUT);
+	digitalWrite(dSPIN_CS, HIGH);
+
+	if( err !=0){
+		fprintf(stderr, "wiringPi Setup failed with Error %x\n", err);
+		return dSPIN_STATUS_FATAL;
+	}
   
   // reset the dSPIN chip. This could also be accomplished by
   //  calling the "dSPIN_ResetDev()" function after SPI is initialized.
@@ -169,15 +172,19 @@ int dSPIN_init()
   //  SPI clock not to exceed 5MHz,
   
 	err = wiringPiSPISetup(dSPIN_SPI_CHANNEL, dSPIN_SPI_CLOCK_SPD_1MHZ);
+	perror("SPI Setup status: ");
+	fprintf(stderr, "SPI Setup returned: %x", err);
 	if( err == -1){
-		fprintf(stderr, "SPI Setup failed with Error %p\n", errno);
+		fprintf(stderr, "SPI Setup failed with Error %x\n", errno);
 		return dSPIN_STATUS_FATAL;
 	}
-	err = 0;
-	// hoping this isn't necessary because it's not documented in
-	// wiringPi
+	// wiringPi assumes we are using mode 0, while the dSPIN wants // Mode 3. Have to adjust this in source and recompile wiringPi.
+	// Which sucks. Probably would have been better to bit-bash at this
+	// point.
+
 	//SPI_MODE3 (clock idle high, latch data on rising edge of clock)  
-  //SPI.setBitOrder(MSBFIRST);
+
   //SPI.setDataMode(SPI_MODE3);
+  //SPI.setBitOrder(MSBFIRST);
 	return 0;
 }

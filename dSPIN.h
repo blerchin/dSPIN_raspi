@@ -54,7 +54,7 @@ dSPIN_main.c - Contains a sanity test routine.
  *****************************************************************/
 
 // emulate silly Arduino convention
-typedef char byte;
+typedef unsigned char byte;
 
 // include the SPI library:
 #include <wiringPi.h>
@@ -64,6 +64,10 @@ typedef char byte;
 // digitalWrite capable pin.
 #define dSPIN_RESET      24   // Wire this to the STBY line
 #define dSPIN_BUSYN      25   // Wire this to the BSYN line
+#define dSPIN_CS				 23		// Wire this to the CSN line
+#define dSPIN_MOSI			 27		// Wire this to the CSN line
+#define dSPIN_MISO			 22		// Wire this to the CSN line
+#define dSPIN_CLK 			 17		// Wire this to the CSN line
 
 #define dSPIN_SPI_CHANNEL 0
 
@@ -298,7 +302,7 @@ int dSPIN_init();
  *  CS (slaveSelect) pin after each byte sent. That makes this function
  *  a bit more reasonable, because we can include more functionality in it.
  */
-char dSPIN_Xfer(char data);
+byte dSPIN_Xfer(byte data);
 
 // The value in the ACC register is [(steps/s/s)*(tick^2)]/(2^-40) where tick is 
 //  250ns (datasheet value)- 0x08A on boot.
