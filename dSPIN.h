@@ -58,18 +58,18 @@ typedef unsigned char byte;
 
 // include the SPI library:
 #include <wiringPi.h>
-#include <wiringPiSPI.h>
 
 // Pin settings are arbitrary and can be changed to any available
 // digitalWrite capable pin.
 #define dSPIN_RESET      24   // Wire this to the STBY line
 #define dSPIN_BUSYN      25   // Wire this to the BSYN line
 #define dSPIN_CS				 23		// Wire this to the CSN line
-#define dSPIN_MOSI			 27		// Wire this to the CSN line
-#define dSPIN_MISO			 22		// Wire this to the CSN line
-#define dSPIN_CLK 			 17		// Wire this to the CSN line
+#define dSPIN_MOSI			 27		// Wire this to the SDI line
+#define dSPIN_MISO			 22		// Wire this to the SDO line
+#define dSPIN_CLK 			 17		// Wire this to the CK line
 
-#define dSPIN_SPI_CHANNEL 0
+/*SPI clock settings */
+#define dSPIN_SPI_CLOCK_DELAY 100 //Delay in microsecs; = 200 kHz
 
 // constant definitions for overcurrent thresholds. Write these values to 
 //  register dSPIN_OCD_TH to set the level at which an overcurrent even occurs.
@@ -287,8 +287,6 @@ typedef unsigned char byte;
 #define dSPIN_STATUS_GOOD
 #define dSPIN_STATUS_FATAL 1
 
-/*SPI clock settings */
-#define dSPIN_SPI_CLOCK_SPD_1MHZ 1000000
 
 /************ dSPIN_support.c ***********************/
 

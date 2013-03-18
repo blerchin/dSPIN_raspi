@@ -8,22 +8,38 @@
 //   function for the dsPIN chip and the onboard peripherals needed to use it.
 
 
+
 // This simple function shifts a byte out over SPI and receives a byte over
 //  SPI. Unusually for SPI devices, the dSPIN requires a toggling of the
 //  CS (slaveSelect) pin after each byte sent. That makes this function
 //  a bit more reasonable, because we can include more functionality in it.
+//  This is SPI_MODE3 (clock idle high, latch data on rising edge of clock)
+//  MSB is first.
 byte dSPIN_Xfer(byte data)
 {
-	int err=0;
-	fprintf(stderr, "Transferring byte %x.\n", data);
 	digitalWrite(dSPIN_CS, LOW);	
-  err = wiringPiSPIDataRW(dSPIN_SPI_CHANNEL, &data, 8);
-	int en = errno;
-	digitalWrite(dSPIN_CS, HIGH);
-	fprintf(stderr,"Transferred a byte with status %x.\n", err);
-	fprintf(stderr,"Transferred a byte with errno %x.\n", en);
-	fprintf(stderr,"Transferred a byte with result %x.\n", data);
-	err = 0;
+
+	for(int i=0; i<8; i++){
+		delayMicroseconds( dSPIN_SPI_CLOCK_DELAY/2 );
+		digitalWrite(dSPIN_CLK, LOW);
+
+		if(data & 0x80){
+			digitalWrite(dSPIN_MOSI, HIGH);
+		}else{
+			digitalWrite(dSPIN_MOSI, LOW);
+		}
+
+		delayMicroseconds( dSPIN_SPI_CLOCK_DELAY/2 );
+		digitalWrite(dSPIN_CLK, HIGH);
+
+		data <<= 1;
+		
+		if(digitalRead(dSPIN_MISO))
+			data |= 1;
+	}
+
+	digitalWrite(dSPIN_CS, HIGH);	
+
 
   return data;
 }
@@ -161,28 +177,22 @@ int dSPIN_init()
   // reset the dSPIN chip. This could also be accomplished by
   //  calling the "dSPIN_ResetDev()" function after SPI is initialized.
   digitalWrite(dSPIN_RESET, HIGH);
-  delay(1);
+  delay(1000);
   digitalWrite(dSPIN_RESET, LOW);
-  delay(1);
+  delay(1000);
   digitalWrite(dSPIN_RESET, HIGH);
-  delay(1);
+  delay(1000);
   
   // initialize SPI for the dSPIN chip's needs:
   //  most significant bit first,
   //  SPI clock not to exceed 5MHz,
   
-	err = wiringPiSPISetup(dSPIN_SPI_CHANNEL, dSPIN_SPI_CLOCK_SPD_1MHZ);
-	perror("SPI Setup status: ");
-	fprintf(stderr, "SPI Setup returned: %x", err);
-	if( err == -1){
-		fprintf(stderr, "SPI Setup failed with Error %x\n", errno);
-		return dSPIN_STATUS_FATAL;
-	}
-	// wiringPi assumes we are using mode 0, while the dSPIN wants // Mode 3. Have to adjust this in source and recompile wiringPi.
-	// Which sucks. Probably would have been better to bit-bash at this
-	// point.
+	pinMode(dSPIN_MOSI, OUTPUT);
+	pinMode(dSPIN_MISO, INPUT);
+	pinMode(dSPIN_CLK,  OUTPUT);
 
 	//SPI_MODE3 (clock idle high, latch data on rising edge of clock)  
+	digitalWrite(dSPIN_CLK, HIGH);
 
   //SPI.setDataMode(SPI_MODE3);
   //SPI.setBitOrder(MSBFIRST);

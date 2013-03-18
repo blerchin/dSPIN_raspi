@@ -162,6 +162,7 @@ unsigned long dSPIN_ParamHandler(byte param, unsigned long value)
     //  users should refer to the datasheet to ensure that they fully understand each one of
     //  the bits in the register.
     case dSPIN_STATUS:  // STATUS is a read-only register
+			printf("checking status");
       ret_val = dSPIN_Param(0, 16);
       break;
     default:
