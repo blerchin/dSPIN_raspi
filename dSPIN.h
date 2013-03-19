@@ -1,9 +1,11 @@
 /*****************************************************************
 Example code for the STMicro L6470 dSPIN stepper motor driver.
+
 This code is public domain beerware/Sunny-D-ware. If you find it useful and
 run into me someday, I'd appreciate a cold one.
 
 12/12/2011- Mike Hord, SparkFun Electronics
+3/18/2013- Ported to Raspberry Pi – Ben Lerchin (benlerchin.com)
 
 The breakout board for the dSPIN chip has 7 data lines:
 BSYN- this line is LOW when the chip is busy; busy generally means things
@@ -56,20 +58,23 @@ dSPIN_main.c - Contains a sanity test routine.
 // emulate silly Arduino convention
 typedef unsigned char byte;
 
-// include the SPI library:
+// include the wiringPi library for GPIO:
 #include <wiringPi.h>
 
 // Pin settings are arbitrary and can be changed to any available
-// digitalWrite capable pin.
+// GPIO pin.
 #define dSPIN_RESET      24   // Wire this to the STBY line
 #define dSPIN_BUSYN      25   // Wire this to the BSYN line
 #define dSPIN_CS				 23		// Wire this to the CSN line
 #define dSPIN_MOSI			 27		// Wire this to the SDI line
-#define dSPIN_MISO			 22		// Wire this to the SDO line
+#define dSPIN_MISO			 4		// Wire this to the SDO line
 #define dSPIN_CLK 			 17		// Wire this to the CK line
 
 /*SPI clock settings */
-#define dSPIN_SPI_CLOCK_DELAY 100 //Delay in microsecs; = 200 kHz
+#define dSPIN_SPI_CLOCK_DELAY 1  //Not scientifically derived.
+																	//10 microsecs = 100 kHz seems to work
+																	//reliably and speed really isn't an
+																	//issue for most applications.
 
 // constant definitions for overcurrent thresholds. Write these values to 
 //  register dSPIN_OCD_TH to set the level at which an overcurrent even occurs.
@@ -284,22 +289,19 @@ typedef unsigned char byte;
 #define ACTION_COPY   0x01
 
 /* basic error codes */
-#define dSPIN_STATUS_GOOD
+#define dSPIN_STATUS_GOOD 0
 #define dSPIN_STATUS_FATAL 1
 
 
-/************ dSPIN_support.c ***********************/
+/***************** dSPIN_support.c ***********************/
 
-/* Call this first to set up raspi SPI interface and prepare dSPIN to
- * receive commands.
+/* Call this first to set up raspi SPI interface and reset dSPIN to
+ * ready state.
  */
 int dSPIN_init();
 	
 /* This simple function shifts a byte out over SPI and receives a byte over
- *  SPI. Unusually for SPI devices, the dSPIN requires a toggling of the
- *  CS (slaveSelect) pin after each byte sent. That makes this function
- *  a bit more reasonable, because we can include more functionality in it.
- */
+ *  SPI.  */
 byte dSPIN_Xfer(byte data);
 
 // The value in the ACC register is [(steps/s/s)*(tick^2)]/(2^-40) where tick is 

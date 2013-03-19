@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "dSPIN.h"
 
 //dSPIN_commands.ino - Contains high-level command implementations- movement
@@ -154,7 +152,6 @@ unsigned long dSPIN_ParamHandler(byte param, unsigned long value)
     //  understand the implications of their modifications. Value on boot is 0x2E88; this
     //  can be a useful way to verify proper start up and operation of the dSPIN chip.
     case dSPIN_CONFIG: 
-			printf("checking config\n");
       ret_val = dSPIN_Param(value, 16);
       break;
     // STATUS contains read-only information about the current condition of the chip. A
@@ -162,7 +159,6 @@ unsigned long dSPIN_ParamHandler(byte param, unsigned long value)
     //  users should refer to the datasheet to ensure that they fully understand each one of
     //  the bits in the register.
     case dSPIN_STATUS:  // STATUS is a read-only register
-			printf("checking status");
       ret_val = dSPIN_Param(0, 16);
       break;
     default:

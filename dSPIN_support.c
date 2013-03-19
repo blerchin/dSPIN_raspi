@@ -20,26 +20,29 @@ byte dSPIN_Xfer(byte data)
 	digitalWrite(dSPIN_CS, LOW);	
 
 	for(int i=0; i<8; i++){
-		delayMicroseconds( dSPIN_SPI_CLOCK_DELAY/2 );
 		digitalWrite(dSPIN_CLK, LOW);
+
 
 		if(data & 0x80){
 			digitalWrite(dSPIN_MOSI, HIGH);
 		}else{
 			digitalWrite(dSPIN_MOSI, LOW);
 		}
-
 		delayMicroseconds( dSPIN_SPI_CLOCK_DELAY/2 );
-		digitalWrite(dSPIN_CLK, HIGH);
-
+		
 		data <<= 1;
 		
 		if(digitalRead(dSPIN_MISO))
 			data |= 1;
+
+		digitalWrite(dSPIN_CLK, HIGH);
+
+		delayMicroseconds( dSPIN_SPI_CLOCK_DELAY/2 );
+
 	}
 
 	digitalWrite(dSPIN_CS, HIGH);	
-
+	delayMicroseconds( dSPIN_SPI_CLOCK_DELAY );
 
   return data;
 }
@@ -174,15 +177,6 @@ int dSPIN_init()
 		return dSPIN_STATUS_FATAL;
 	}
   
-  // reset the dSPIN chip. This could also be accomplished by
-  //  calling the "dSPIN_ResetDev()" function after SPI is initialized.
-  digitalWrite(dSPIN_RESET, HIGH);
-  delay(1000);
-  digitalWrite(dSPIN_RESET, LOW);
-  delay(1000);
-  digitalWrite(dSPIN_RESET, HIGH);
-  delay(1000);
-  
   // initialize SPI for the dSPIN chip's needs:
   //  most significant bit first,
   //  SPI clock not to exceed 5MHz,
@@ -194,7 +188,15 @@ int dSPIN_init()
 	//SPI_MODE3 (clock idle high, latch data on rising edge of clock)  
 	digitalWrite(dSPIN_CLK, HIGH);
 
-  //SPI.setDataMode(SPI_MODE3);
-  //SPI.setBitOrder(MSBFIRST);
+  // reset the dSPIN chip. This could also be accomplished by
+  //  calling the "dSPIN_ResetDev()" function after SPI is initialized.
+  digitalWrite(dSPIN_RESET, HIGH);
+  delay(2);
+  digitalWrite(dSPIN_RESET, LOW);
+  delay(2);
+  digitalWrite(dSPIN_RESET, HIGH);
+  delay(2);
+  
+
 	return 0;
 }
